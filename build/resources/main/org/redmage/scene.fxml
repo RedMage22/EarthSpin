@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<?import javafx.scene.paint.PhongMaterial?>
+<StackPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.redmage.FXMLController">
+    <ImageView fx:id="starField">
+        <image>
+            <Image url="@images/2k_stars_milky_way.jpg" />
+        </image>
+    </ImageView>
+
+   <SubScene fx:id="subScene" height="1024" width="2048" depthBuffer="true">
+     <root>
+         <Group fx:id="earthGroup" layoutX="1024" layoutY="512" translateZ="0">
+             <children>
+                 <Sphere id="Earth" fx:id="earth" radius="250" rotate="-23.5"/>
+                 <Group fx:id="moonGroup" rotate="5.14">
+                     <children>
+                         <Sphere id="Moon" fx:id="moon" radius="50" rotate="6.68"/>
+                     </children>
+                 </Group>
+             </children>
+         </Group>
+     </root>
+   </SubScene>
+</StackPane>
