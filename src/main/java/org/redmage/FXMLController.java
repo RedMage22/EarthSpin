@@ -1,8 +1,6 @@
 package org.redmage;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.fxml.FXML;
 import javafx.scene.*;
 import javafx.scene.image.Image;
@@ -22,6 +20,8 @@ public class FXMLController {
     final Logger logger = Logger.getLogger(getClass().getName());
     @FXML
     private ImageView starField;
+    @FXML
+    private ImageView starField2;
     @FXML
     private SubScene subScene;
     @FXML
@@ -121,6 +121,7 @@ public class FXMLController {
         moonGroupTimeline.setCycleCount(Timeline.INDEFINITE);
         moonGroupTimeline.play();
 
+        executeStarFieldTransition();
 
         PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setFieldOfView(35);
@@ -129,4 +130,21 @@ public class FXMLController {
         camera.translateZProperty().set(-3000);
         earthGroup.getChildren().add(camera);
     }
+
+    private void executeStarFieldTransition() {
+
+        double transitionTime = 2D;
+        TranslateTransition transition1 = new TranslateTransition(Duration.minutes(transitionTime), starField);
+        transition1.setFromX(0);
+        transition1.setToX(subScene.getWidth());
+        TranslateTransition transition2 = new TranslateTransition(Duration.minutes(transitionTime), starField2);
+        transition2.setFromX(-subScene.getWidth());
+        transition2.setToX(0);
+        ParallelTransition slideshow = new ParallelTransition(transition1, transition2);
+        slideshow.setInterpolator(Interpolator.LINEAR);
+        slideshow.setCycleCount(Animation.INDEFINITE);
+        slideshow.play();
+
+    }
+
 }
