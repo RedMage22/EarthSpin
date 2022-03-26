@@ -5,8 +5,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<?import javafx.scene.paint.PhongMaterial?>
-<StackPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.redmage.FXMLController">
+<?import javafx.scene.control.Button?>
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.redmage.FXMLController">
     <ImageView fx:id="starField">
         <image>
             <Image url="@images/2k_stars_milky_way.jpg" />
@@ -27,4 +27,9 @@
          </Group>
      </root>
    </SubScene>
+    <BorderPane >
+        <bottom>
+            <Button fx:id="fullscreenButton" text="Fullscreen Mode"/>
+        </bottom>
+    </BorderPane>
 </StackPane>

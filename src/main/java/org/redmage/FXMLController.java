@@ -4,7 +4,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.*;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.PhongMaterial;
@@ -12,6 +14,7 @@ import javafx.scene.shape.CullFace;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.util.logging.Logger;
@@ -32,17 +35,29 @@ public class FXMLController {
     private Sphere moon;
     @FXML
     private Group moonGroup;
+    @FXML
+    private Button fullscreenButton;
 
+    private Stage stage;
+
+    ImageView windowScreenIcon;
+    ImageView fullscreenIcon;
+
+    private int clickCount;
 
     public void initialize() {
         String earthDayImageFile = "images/2k_earth_day_map.jpg";
         String earthBumpImageFile = "images/2k_earth_normal_map.jpg";
         String earthNightImageFile = "images/2k_earth_night_map.jpg";
         String moonImageFile = "images/2k_moon.jpg";
+        String windowScreenIconFile = "images/windowed_screen_icon.jpg";
+        String fullscreenIconFile = "images/fullscreen_icon.jpg";
         Image earthDayImage = null;
         Image earthBumpImage = null;
         Image earthNightImage = null;
         Image moonImage = null;
+        Image windowScreenIconImage = null;
+        Image fullscreenIconImage = null;
         try {
             earthDayImage = new Image(getClass().getResourceAsStream(earthDayImageFile));
             logger.info("Earth day image " + (earthDayImage.isError() ? "did not load :-(" : "loaded successfully!!! :-)"));
@@ -52,6 +67,10 @@ public class FXMLController {
             logger.info("Earth night image " + (earthNightImage.isError() ? "did not load :-(" : "loaded successfully!!! :-)"));
             moonImage = new Image(getClass().getResourceAsStream(moonImageFile));
             logger.info("Moon image " + (moonImage.isError() ? "did not load :-(" : "loaded successfully!!! :-)"));
+            windowScreenIconImage = new Image(getClass().getResourceAsStream(windowScreenIconFile));
+            logger.info("Window screen icon " + (windowScreenIconImage.isError() ? "did not load :-(" : "loaded successfully!!! :-)"));
+            fullscreenIconImage = new Image(getClass().getResourceAsStream(fullscreenIconFile));
+            logger.info("Fullscreen icon " + (fullscreenIconImage.isError() ? "did not load :-(" : "loaded successfully!!! :-)"));
         } catch (NullPointerException npe) {
             npe.printStackTrace();
         }
@@ -121,12 +140,92 @@ public class FXMLController {
         moonGroupTimeline.setCycleCount(Timeline.INDEFINITE);
         moonGroupTimeline.play();
 
-
         PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setFieldOfView(35);
         camera.setNearClip(0.01);
         camera.setFarClip(100);
         camera.translateZProperty().set(-3000);
         earthGroup.getChildren().add(camera);
+
+        int imageSize = 15;
+        windowScreenIcon = new ImageView(windowScreenIconImage);
+        windowScreenIcon.setFitWidth(imageSize);
+        windowScreenIcon.setFitHeight(imageSize);
+        fullscreenIcon = new ImageView(fullscreenIconImage);
+        fullscreenIcon.setFitHeight(imageSize);
+        fullscreenIcon.setFitWidth(imageSize);
+    }
+
+    public void initializeStage(Stage stage, Rectangle2D screenBounds) {
+        setStage(stage);
+        setFullscreenListener(screenBounds);
+        setKeyPressedListener(stage, screenBounds);
+        setWindowedScreen(stage, screenBounds, false);
+    }
+
+    public void setStage(Stage stage) {
+        if (stage != null) {
+            this.stage = stage;
+        }
+    }
+
+    public void setFullscreenListener(Rectangle2D screenBounds) {
+        clickCount = 0;
+        fullscreenButton.setOnAction(event -> {
+            Node node = (Node) event.getSource();
+            Stage stage = (Stage) node.getScene().getWindow();
+            if (clickCount % 2 == 0) {
+                setFullScreen(stage, screenBounds, true);
+            } else {
+                setWindowedScreen(stage, screenBounds, true);
+            }
+        });
+    }
+
+    public void setKeyPressedListener(Stage stage, Rectangle2D screenBounds) {
+        Scene scene = stage.getScene();
+        if (scene != null) {
+            scene.setOnKeyPressed(event -> {
+                logger.info("KeyPress event " + event.getCode() + " was fired!!");
+                switch (event.getCode())  {
+                    case ESCAPE:
+                        if (clickCount % 2 != 0) {
+                            logger.info("Stage is set to " + (stage.isFullScreen() ? "fullscreen" : "windowed") + " mode.");
+                            setWindowedScreen(stage, screenBounds, true);
+                            logger.info("Windowed screen was set.");
+                        }
+                        break;
+
+                }
+            });
+        }
+    }
+
+    public void setFullScreen(Stage stage, Rectangle2D screenBounds, boolean clickUpdate) {
+        stage.setFullScreen(true);
+        setBackgroundBounds(screenBounds, 1);
+        fullscreenButton.setGraphic(windowScreenIcon);
+        fullscreenButton.setText("Windowed Mode");
+        if (clickUpdate) {
+            clickCount++;
+        }
+    }
+
+    public void setWindowedScreen(Stage stage, Rectangle2D screenBounds, boolean clickUpdate) {
+        // Add component changes here
+        stage.setFullScreen(false);
+        setBackgroundBounds(screenBounds, 2);
+        fullscreenButton.setGraphic(fullscreenIcon);
+        fullscreenButton.setText("Fullscreen Mode");
+        if (clickUpdate) {
+            clickCount++;
+        }
+    }
+
+    public void setBackgroundBounds(Rectangle2D screenBounds, int i) {
+        if (i > 0) {
+            starField.setFitHeight(screenBounds.getHeight()/i);
+            starField.setFitWidth(screenBounds.getWidth()/i);
+        }
     }
 }
