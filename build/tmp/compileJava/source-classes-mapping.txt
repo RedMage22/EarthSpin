@@ -1,4 +1,5 @@
-org/redmage/EarthSpin.java
- org.redmage.EarthSpin
 org/redmage/FXMLController.java
  org.redmage.FXMLController
+ org.redmage.FXMLController$1
+org/redmage/EarthSpin.java
+ org.redmage.EarthSpin
