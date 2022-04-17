@@ -1,5 +1,6 @@
 package org.redmage;
 
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -17,6 +18,7 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.text.DecimalFormat;
 import java.util.logging.Logger;
 
 
@@ -37,13 +39,31 @@ public class FXMLController {
     private Group moonGroup;
     @FXML
     private Button fullscreenButton;
+    @FXML
+    private Button rotateCameraButton;
+    @FXML
+    private Button reverseAnimationButton;
 
     private Stage stage;
 
-    ImageView windowScreenIcon;
-    ImageView fullscreenIcon;
+    @FXML
+    private PerspectiveCamera camera;
+
+    @FXML
+    private Group cameraTravelGroup;
+
+    private ImageView windowScreenIcon;
+    private ImageView fullscreenIcon;
 
     private int clickCount;
+
+    private Timeline cameraRotationAnimation;
+
+    private KeyFrame endKeyFrame;
+    private int rotationDuration;
+    private int rotationAngle;
+    private Rotate yRotate;
+    private DecimalFormat decimalFormat;
 
     public void initialize() {
         String earthDayImageFile = "images/2k_earth_day_map.jpg";
@@ -88,9 +108,9 @@ public class FXMLController {
         moon.setMaterial(moonPhong);
         moon.setCullFace(CullFace.BACK);
         moon.setCacheHint(CacheHint.SCALE_AND_ROTATE);
-        earthGroup.setLayoutX(subScene.getWidth()/2);
+//        earthGroup.setLayoutX(subScene.getWidth()/2); // comment this line to move earthGroup more to the center of the screen
         logger.info("SubScene width = " + subScene.getWidth());
-        earthGroup.setLayoutY(subScene.getHeight()/2);
+//        earthGroup.setLayoutY(subScene.getHeight()/2);
         logger.info("SubScene height = " + subScene.getHeight());
 
 
@@ -140,12 +160,31 @@ public class FXMLController {
         moonGroupTimeline.setCycleCount(Timeline.INDEFINITE);
         moonGroupTimeline.play();
 
-        PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setFieldOfView(35);
         camera.setNearClip(0.01);
         camera.setFarClip(100);
-        camera.translateZProperty().set(-3000);
-        earthGroup.getChildren().add(camera);
+        camera.setTranslateX(-1200);
+        camera.setTranslateY(-300);
+
+        Translate pivot = new Translate();
+        yRotate = new Rotate(0, Rotate.Y_AXIS);
+
+        cameraTravelGroup.getTransforms().addAll(
+                pivot,
+                yRotate,
+                new Rotate(0, Rotate.X_AXIS),
+                new Translate(0, 0, -500)
+        );
+
+        subScene.setCamera(camera);
+
+
+        rotationDuration = 10;
+        rotationAngle = 360;
+
+        resetRotationAnimation();
+//        cameraRotationAnimation.play();
+
 
         int imageSize = 15;
         windowScreenIcon = new ImageView(windowScreenIconImage);
@@ -154,12 +193,16 @@ public class FXMLController {
         fullscreenIcon = new ImageView(fullscreenIconImage);
         fullscreenIcon.setFitHeight(imageSize);
         fullscreenIcon.setFitWidth(imageSize);
+
+        decimalFormat = new DecimalFormat("0.00");
     }
 
     public void initializeStage(Stage stage, Rectangle2D screenBounds) {
         setStage(stage);
         setFullscreenListener(screenBounds);
         setKeyPressedListener(stage, screenBounds);
+        setCameraRotationListener();
+        setReverseAnimationListener();
         setWindowedScreen(stage, screenBounds, false);
     }
 
@@ -193,9 +236,10 @@ public class FXMLController {
                             logger.info("Stage is set to " + (stage.isFullScreen() ? "fullscreen" : "windowed") + " mode.");
                             setWindowedScreen(stage, screenBounds, true);
                             logger.info("Windowed screen was set.");
+                        } else {
+                            logger.info("Windowed screen already set. No change made!");
                         }
                         break;
-
                 }
             });
         }
@@ -204,6 +248,7 @@ public class FXMLController {
     public void setFullScreen(Stage stage, Rectangle2D screenBounds, boolean clickUpdate) {
         stage.setFullScreen(true);
         setBackgroundBounds(screenBounds, 1);
+        setSubScene(screenBounds, 1);
         fullscreenButton.setGraphic(windowScreenIcon);
         fullscreenButton.setText("Windowed Mode");
         if (clickUpdate) {
@@ -215,11 +260,17 @@ public class FXMLController {
         // Add component changes here
         stage.setFullScreen(false);
         setBackgroundBounds(screenBounds, 2);
+        setSubScene(screenBounds, 2);
         fullscreenButton.setGraphic(fullscreenIcon);
         fullscreenButton.setText("Fullscreen Mode");
         if (clickUpdate) {
             clickCount++;
         }
+    }
+
+    public void setSubScene(Rectangle2D screenBounds, int i) {
+        subScene.setLayoutX(screenBounds.getWidth()/i);
+        subScene.setLayoutY(screenBounds.getHeight()/i);
     }
 
     public void setBackgroundBounds(Rectangle2D screenBounds, int i) {
@@ -228,4 +279,76 @@ public class FXMLController {
             starField.setFitWidth(screenBounds.getWidth()/i);
         }
     }
+
+    public void setCameraRotationListener() {
+        rotateCameraButton.setOnAction(event -> {
+            playCameraRotation();
+        });
+
+    }
+
+    public void playCameraRotation() {
+        switch (cameraRotationAnimation.getStatus()) {
+            case RUNNING:
+                cameraRotationAnimation.pause();
+                logger.info("Y Rotate angle property paused at " + decimalFormat.format(yRotate.getAngle()) + " degrees.");
+                break;
+            default:
+                cameraRotationAnimation.play();
+                logger.info("Y Rotate angle played from " + decimalFormat.format(yRotate.getAngle()));
+                logger.info("Y Rotate angle property: " + yRotate.angleProperty());
+
+        }
+    }
+
+    public void setReverseAnimationListener() {
+        reverseAnimationButton.setOnAction(event ->
+                clockwiseCameraRotation()
+        );
+    }
+
+    public void clockwiseCameraRotation() {
+        if (cameraRotationAnimation != null && cameraRotationAnimation.getStatus().equals(Animation.Status.RUNNING)) {
+            cameraRotationAnimation.pause();
+            logger.info("Camera rotation animation paused");
+            logger.info("Y Rotate angle property paused at " + decimalFormat.format(yRotate.getAngle()) + " degrees.");
+        }
+
+
+        if (rotationAngle > 0) {
+            rotationAngle *= -1;
+        } else {
+            rotationAngle *= -1;
+        }
+        resetRotationAnimation();
+        setRotationAngle();
+    }
+
+    public void setRotationAngle() {
+        double result = rotationAngle + yRotate.getAngle();
+        logger.info("Change angle from " + decimalFormat.format(yRotate.getAngle()) + " to " + decimalFormat.format(result));
+        yRotate.setAngle(result);
+    }
+
+    public void setCounterClockwiseRotationAngle() {
+        double result = rotationAngle + yRotate.getAngle();
+        logger.info("Change angle from " + decimalFormat.format(yRotate.getAngle()) + " to " + decimalFormat.format(result));
+        yRotate.setAngle(result);
+    }
+
+    public void resetRotationAnimation() {
+        cameraRotationAnimation = new Timeline(
+                new KeyFrame(
+                        Duration.ZERO,
+                        new KeyValue(yRotate.angleProperty(), 0)
+                ),
+                endKeyFrame = new KeyFrame(
+                        Duration.seconds(rotationDuration), // 5
+                        new KeyValue(yRotate.angleProperty(), rotationAngle) // 360
+                )
+        );
+        cameraRotationAnimation.setCycleCount(Timeline.INDEFINITE);
+        logger.info("EndKeyFrame Rotation angle changed to " + rotationAngle + " degrees.");
+    }
+
 }

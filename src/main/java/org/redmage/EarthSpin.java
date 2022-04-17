@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
+import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.stage.Screen;
@@ -41,7 +42,6 @@ public class EarthSpin extends Application {
         logger.info("Screen width = " + windowWidth);
 
         Scene scene = new Scene(root, windowWidth/2, windowHeight/2, true, SceneAntialiasing.BALANCED);
-
         primaryStage.setTitle("Earth Spin");
         primaryStage.setScene(scene);
 
